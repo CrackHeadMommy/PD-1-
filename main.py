@@ -7,25 +7,24 @@ layoutMain = [  [sg.Text("Wabalabadubdub")],
                 [sg.Button("Quit")]]
 
 layoutInput = [ [sg.Text("Preces pievienošana:")],
-                [sg.Text("Nosaukums: "), sg.InputText(key="name")],
-                [sg.Text("Skaits: "), sg.InputText(key="amountA")],
+                [sg.Text("Nosaukums: "), sg.Push(), sg.InputText(key="name")],
+                [sg.Text("Skaits: "), sg.Push(), sg.InputText(key="amountA")],
                 [sg.Text("Tips: "), sg.Radio("Detaļa", group_id="add", default=True, key="detala"), sg.Radio("Programmatūra", group_id="add", key="programma")],
-                [sg.Button("Add")],
-                [sg.Button("Back")] ]
+                [sg.Button("Add"), sg.Push(), sg.Button("Back")] ]
 
-layoutOutput = [[sg.Listbox(values=[], key="output", size=(40,20))],
-                [sg.Button("Remove"), sg.InputText(key= "amountR")],
-                [sg.Button("Back.")] ]
+layoutOutput = [[sg.Listbox(values=[], key="output", size=(60,20))],
+                [sg.Button("Remove"), sg.InputText(key= "amountR"), sg.Push(), sg.Button("Back.")] ]
 
 layout = [[sg.Column(layoutMain, key="Main"), sg.Column(layoutInput, visible=False, key="Input"), sg.Column(layoutOutput, visible=False, key="Output")]]
 
 
-window = sg.Window('Gain reporter', layout)
+window = sg.Window('Stock reporter', layout)
 
 Stack = []
 
 while True:
         event, values = window.read()
+
         if event == sg.WIN_CLOSED or event == 'Quit':
                 break
         
@@ -46,18 +45,38 @@ while True:
                 window[f'Main'].update(visible=True)
 
         if event == "Add":
-                item = prod(values["name"], values["amountA"], type)
+                tip = "none"
+
+                for thing in values:
+                        if values[thing] == True:
+                                tip = thing
+                                break
+
+                item = prod(values["name"], values["amountA"], tip)
                 
                 Stack = add(Stack, item)
 
                 list=[]
                 for product in Stack:
                         if product.amount != 0:
-                                # CHANGE THIS
-                                list.append(str(product.amount) + "kg of " + str(product.species) + " which is considered a " + str(product.fruit))
-                                # CHANGE THIS
+                                list.append(str(product.amount) + " of " + str(product.name) + " which is considered a " + str(product.type))
 
                 window["output"].update(values=list)
+                
+        if event == "Remove":
+                for item in Stack:
+                        if item.compare() == values["output"][0]:
+                                if item.take(values["amountR"]):
+                                        if item.amount == 0:
+                                                Stack.remove(item)
+                                break
+                                     
+                list=[]
+                for product in Stack:
+                        if product.amount != 0:
+                                list.append(str(product.amount) + " of " + str(product.name) + " which is considered a " + str(product.type))
+
+                window["output"].update(values=list)   
                 
 
 window.close()
